@@ -1,0 +1,37 @@
+@use "../../styles/variables" as *;
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+
+  &__mark {
+    display: grid;
+    width: 40px;
+    height: 40px;
+    place-items: center;
+    border-radius: 13px;
+    background: linear-gradient(145deg, #62a1ff, #2d70ef);
+    box-shadow: 0 8px 20px rgba($color-primary, 0.27);
+
+    svg {
+      width: 34px;
+      fill: #fff;
+    }
+  }
+
+  &__spark {
+    fill: $color-primary;
+  }
+
+  &__name {
+    color: $color-ink;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+
+    strong {
+      color: $color-primary;
+    }
+  }
+}

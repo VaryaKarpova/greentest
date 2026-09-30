@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import "./MessageComposer.scss";
 
 const MAX_MESSAGE_LENGTH = 4000;
 

@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import type { Credentials } from "../../types";
+import "./AuthForm.scss";
 
 type AuthFormProps = {
   onSubmit: (credentials: Credentials) => void;

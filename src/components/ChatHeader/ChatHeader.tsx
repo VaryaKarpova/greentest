@@ -1,6 +1,7 @@
 import type { Chat } from "../../types";
 import { formatPhone } from "../../utils/phone";
 import type { NotificationConnectionStatus } from "../../hooks/useNotifications";
+import "./ChatHeader.scss";
 
 type ChatHeaderProps = {
   idInstance: string;

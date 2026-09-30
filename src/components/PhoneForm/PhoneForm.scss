@@ -1,0 +1,112 @@
+@use "../../styles/variables" as *;
+
+.phone-form {
+  display: grid;
+  gap: 10px;
+
+  &--compact { padding: 18px 16px 8px; }
+
+  &__heading {
+    margin-bottom: 4px;
+
+    h2 {
+      margin: 8px 0 5px;
+      font-size: 21px;
+      letter-spacing: -0.04em;
+    }
+
+    p {
+      margin: 0;
+      color: $color-muted;
+      font-size: 11px;
+    }
+  }
+
+  &__control {
+    position: relative;
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    border: 1px solid #e6e9ef;
+    border-radius: 13px;
+    background: #f6f7f9;
+    transition: border-color 150ms ease, box-shadow 150ms ease, background 150ms ease;
+
+    &:hover { border-color: #cfd5df; }
+
+    &:focus-within {
+      border-color: $color-primary;
+      outline: 2px solid rgba($color-primary, 0.2);
+      outline-offset: 1px;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba($color-primary, 0.08);
+    }
+
+    &:has(input[aria-invalid="true"]) { border-color: #df5a67; }
+
+    input {
+      width: 0;
+      height: 52px;
+      min-width: 0;
+      flex: 1;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      padding: 0 50px 0 8px;
+      color: $color-ink;
+      font-size: 12px;
+      letter-spacing: 0.02em;
+
+      &::placeholder { color: #a0a6b2; }
+      &:focus-visible { outline: 0; }
+    }
+
+    button {
+      position: absolute;
+      right: 3px;
+      display: grid;
+      width: 44px;
+      height: 44px;
+      place-items: center;
+      border-radius: 9px;
+      background: $color-primary;
+      color: #fff;
+      transition: background 150ms ease, transform 150ms ease;
+
+      &:not(:disabled):hover {
+        background: $color-primary-dark;
+        transform: translateX(1px);
+      }
+
+      &:disabled {
+        background: #dbe3f1;
+        color: #9ca9bd;
+      }
+
+      svg {
+        width: 16px;
+        fill: none;
+        stroke: currentColor;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 1.8;
+      }
+    }
+  }
+
+  &__prefix {
+    flex: 0 0 auto;
+    padding-left: 14px;
+    color: $color-ink;
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  &__error {
+    min-height: 14px;
+    color: #c63f4c;
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 1.5;
+  }
+}

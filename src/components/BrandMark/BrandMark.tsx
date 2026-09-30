@@ -1,3 +1,5 @@
+import "./BrandMark.scss";
+
 type BrandMarkProps = {
   compact?: boolean;
 };

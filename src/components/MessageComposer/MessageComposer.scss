@@ -1,0 +1,132 @@
+@use "../../styles/variables" as *;
+
+.composer {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+  margin: auto 16px 14px;
+
+  &__surface {
+    display: flex;
+    min-width: 0;
+    align-items: flex-end;
+    gap: 10px;
+    padding: 7px;
+    border: 1px solid #e2e5eb;
+    border-radius: 17px;
+    background: #fff;
+    box-shadow: 0 7px 24px rgba(31, 39, 57, 0.06);
+    transition: border-color 150ms ease, box-shadow 150ms ease, background 150ms ease;
+
+    &:hover { border-color: #ccd3df; }
+
+    &:focus-within {
+      border-color: $color-primary;
+      outline: 2px solid rgba($color-primary, 0.2);
+      outline-offset: 1px;
+      box-shadow: 0 8px 28px rgba($color-primary, 0.12);
+    }
+
+    &:has(textarea:disabled) {
+      background: #f3f5f8;
+      box-shadow: none;
+    }
+  }
+
+  &--error &__surface { border-color: #df5a67; }
+
+  &__input {
+    position: relative;
+    display: flex;
+    min-width: 0;
+    flex: 1;
+
+    textarea {
+      width: 100%;
+      min-height: 44px;
+      max-height: 144px;
+      overflow-y: auto;
+      resize: none;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: $color-ink;
+      padding: 12px 64px 10px 10px;
+      font-size: 12px;
+      line-height: 1.55;
+
+      &::placeholder { color: #9da3af; }
+
+      &:disabled {
+        color: #8c93a0;
+        -webkit-text-fill-color: #8c93a0;
+        opacity: 1;
+      }
+
+      &:focus-visible { outline: 0; }
+    }
+  }
+
+  &__counter {
+    position: absolute;
+    right: 6px;
+    bottom: 9px;
+    color: #9299a7;
+    font-size: 8px;
+  }
+
+  &__send {
+    display: grid;
+    width: 44px;
+    height: 44px;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 11px;
+    background: #dbe4f5;
+    color: #9eabc1;
+
+    &:not(:disabled) {
+      background: $color-primary;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    &:not(:disabled):hover { background: $color-primary-dark; }
+
+    svg {
+      width: 18px;
+      fill: none;
+      stroke: currentColor;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 1.6;
+    }
+  }
+
+  &__error {
+    min-height: 14px;
+    padding: 0 10px;
+    color: #c63f4c;
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 1.5;
+
+    &-wrapper {
+      display: flex;
+      justify-content: center;
+    }
+  }
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.42);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 700ms linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

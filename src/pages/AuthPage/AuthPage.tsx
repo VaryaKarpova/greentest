@@ -1,6 +1,7 @@
-import { AuthForm } from "../components/AuthForm/AuthForm";
-import { BrandMark } from "../components/BrandMark";
-import type { Credentials } from "../types";
+import { AuthForm } from "../../components/AuthForm/AuthForm";
+import { BrandMark } from "../../components/BrandMark/BrandMark";
+import type { Credentials } from "../../types";
+import "./AuthPage.scss";
 
 type AuthPageProps = {
   onLogin: (credentials: Credentials) => void;

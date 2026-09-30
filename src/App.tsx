@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { AuthPage } from "./pages/AuthPage";
-import { ChatPage } from "./pages/ChatPage";
+import { AuthPage } from "./pages/AuthPage/AuthPage";
+import { ChatPage } from "./pages/ChatPage/ChatPage";
 import type { Credentials } from "./types";
 
 const SESSION_KEY = "max-bridge-credentials";

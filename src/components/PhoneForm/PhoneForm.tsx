@@ -6,6 +6,7 @@ import {
   normalizePastedPhone,
   PHONE_DIGITS_LENGTH,
 } from "../../utils/phone";
+import "./PhoneForm.scss";
 
 type PhoneFormProps = {
   onCreate: (chat: Chat) => void;

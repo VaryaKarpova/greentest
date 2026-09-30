@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { Message } from "../../types";
+import "./MessageList.scss";
 
 type MessageListProps = {
   messages: Message[];

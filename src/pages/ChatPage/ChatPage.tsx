@@ -1,13 +1,14 @@
 import { useState } from "react";
-import { BrandMark } from "../components/BrandMark";
-import { ChatHeader } from "../components/ChatHeader/ChatHeader";
-import { MessageComposer } from "../components/MessageComposer/MessageComposer";
-import { MessageList } from "../components/MessageList/MessageList";
-import { PhoneForm } from "../components/PhoneForm/PhoneForm";
-import { useNotifications } from "../hooks/useNotifications";
-import { useSendMessage } from "../hooks/useSendMessage";
-import type { Chat, Credentials, Message } from "../types";
-import { formatPhone } from "../utils/phone";
+import { BrandMark } from "../../components/BrandMark/BrandMark";
+import { ChatHeader } from "../../components/ChatHeader/ChatHeader";
+import { MessageComposer } from "../../components/MessageComposer/MessageComposer";
+import { MessageList } from "../../components/MessageList/MessageList";
+import { PhoneForm } from "../../components/PhoneForm/PhoneForm";
+import { useNotifications } from "../../hooks/useNotifications";
+import { useSendMessage } from "../../hooks/useSendMessage";
+import type { Chat, Credentials, Message } from "../../types";
+import { formatPhone } from "../../utils/phone";
+import "./ChatPage.scss";
 
 type ChatPageProps = {
   credentials: Credentials;
