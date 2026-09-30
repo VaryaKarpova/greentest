@@ -24,7 +24,8 @@ body {
 }
 
 button,
-input {
+input,
+textarea {
   font: inherit;
 }
 
@@ -37,7 +38,8 @@ button:not(:disabled) {
 }
 
 button:focus-visible,
-input:focus-visible {
+input:focus-visible,
+textarea:focus-visible {
   outline: 3px solid rgba($color-primary, 0.24);
   outline-offset: 2px;
 }
@@ -425,8 +427,11 @@ input:focus-visible {
 
 .chat-page {
   display: grid;
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
   grid-template-columns: 330px minmax(0, 1fr);
+  overflow: hidden;
   background: $color-background;
 }
 
@@ -435,6 +440,8 @@ input:focus-visible {
   z-index: 2;
   display: flex;
   min-width: 0;
+  min-height: 0;
+  overflow: hidden;
   flex-direction: column;
   border-right: 1px solid $color-border;
   background: #fff;
@@ -604,62 +611,71 @@ input:focus-visible {
   &__control {
     position: relative;
     display: flex;
+    min-width: 0;
     align-items: center;
+    border: 1px solid #e6e9ef;
+    border-radius: 13px;
+    background: #f6f7f9;
+    transition: border-color 150ms ease, box-shadow 150ms ease, background 150ms ease;
 
-    > svg {
-      position: absolute;
-      left: 13px;
-      width: 17px;
-      fill: none;
-      stroke: #9299a7;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      stroke-width: 1.5;
+    &:hover {
+      border-color: #cfd5df;
+    }
+
+    &:focus-within {
+      border-color: $color-primary;
+      outline: 2px solid rgba($color-primary, 0.2);
+      outline-offset: 1px;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba($color-primary, 0.08);
+    }
+
+    &:has(input[aria-invalid="true"]) {
+      border-color: #df5a67;
     }
 
     input {
-      width: 100%;
-      height: 46px;
+      width: 0;
+      height: 52px;
       min-width: 0;
-      border: 1px solid #e6e9ef;
-      border-radius: 12px;
+      flex: 1;
+      border: 0;
       outline: 0;
-      background: #f6f7f9;
-      padding: 0 48px 0 40px;
+      background: transparent;
+      padding: 0 50px 0 8px;
       color: $color-ink;
-      font-size: 11px;
-      transition: border-color 150ms ease, box-shadow 150ms ease, background 150ms ease;
+      font-size: 12px;
+      letter-spacing: 0.02em;
 
       &::placeholder {
         color: #a0a6b2;
       }
 
-      &:focus {
-        border-color: $color-primary;
-        background: #fff;
-        box-shadow: 0 0 0 3px rgba($color-primary, 0.1);
-      }
-
-      &[aria-invalid="true"] {
-        border-color: #df5a67;
+      &:focus-visible {
+        outline: 0;
       }
     }
 
     button {
       position: absolute;
-      right: 5px;
+      right: 3px;
       display: grid;
-      width: 36px;
-      height: 36px;
+      width: 44px;
+      height: 44px;
       place-items: center;
       border-radius: 9px;
       background: $color-primary;
       color: #fff;
       transition: background 150ms ease, transform 150ms ease;
 
-      &:hover {
+      &:not(:disabled):hover {
         background: $color-primary-dark;
         transform: translateX(1px);
+      }
+
+      &:disabled {
+        background: #dbe3f1;
+        color: #9ca9bd;
       }
 
       svg {
@@ -673,7 +689,16 @@ input:focus-visible {
     }
   }
 
+  &__prefix {
+    flex: 0 0 auto;
+    padding-left: 14px;
+    color: $color-ink;
+    font-size: 12px;
+    font-weight: 800;
+  }
+
   &__error {
+    min-height: 14px;
     color: #c63f4c;
     font-size: 9px;
     font-weight: 700;
@@ -742,16 +767,23 @@ input:focus-visible {
   border-radius: 50%;
   background: $color-success;
   box-sizing: content-box;
+
+  &--connecting,
+  &--reconnecting {
+    border-color: #fff0cc;
+    background: #e8a52e;
+  }
+
+  &--error {
+    border-color: #fee1e5;
+    background: #dc5361;
+  }
 }
 
 .conversation {
-  display: grid;
-  min-width: 0;
-  min-height: 100vh;
-  grid-template-rows: 74px minmax(0, 1fr) auto;
-  background:
-    radial-gradient(circle at 50% 45%, rgba(74, 130, 238, 0.055), transparent 28%),
-    #f7f8fa;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
 }
 
 .chat-header {
@@ -763,6 +795,7 @@ input:focus-visible {
   border-bottom: 1px solid $color-border;
   background: rgba(255, 255, 255, 0.93);
   backdrop-filter: blur(16px);
+  height: 74px;
 
   &__identity {
     display: flex;
@@ -837,6 +870,39 @@ input:focus-visible {
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+
+    &--connecting i,
+    &--reconnecting i {
+      background: #e8a52e;
+      box-shadow: 0 0 0 3px rgba(#e8a52e, 0.14);
+    }
+
+    &--error i {
+      background: #dc5361;
+      box-shadow: 0 0 0 3px rgba(#dc5361, 0.13);
+    }
+  }
+}
+
+.connection-notice {
+  display: flex;
+  min-height: 30px;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 20px;
+  background: #fff7e6;
+  color: #986511;
+  font-size: 9px;
+  font-weight: 700;
+  text-align: center;
+
+  &--connected {
+    display: none;
+  }
+
+  &--error {
+    background: #fff0f2;
+    color: #b23c49;
   }
 }
 
@@ -870,11 +936,14 @@ input:focus-visible {
   display: grid;
   min-height: 0;
   place-items: center;
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 38px 24px;
 
   &--active {
-    place-items: stretch;
+    display: flex;
+    flex-direction: column;
   }
 }
 
@@ -1011,7 +1080,7 @@ input:focus-visible {
 .message-list {
   display: flex;
   width: min(100%, 900px);
-  min-height: 100%;
+  flex: 1;
   flex-direction: column;
   justify-content: flex-end;
   gap: 10px;
@@ -1044,6 +1113,19 @@ input:focus-visible {
     background: $color-primary;
     color: #fff;
     box-shadow: 0 7px 18px rgba($color-primary, 0.18);
+  }
+
+  &--incoming {
+    align-self: flex-start;
+    border: 1px solid #e5e8ef;
+    border-bottom-left-radius: 5px;
+    background: #fff;
+    color: $color-ink;
+    box-shadow: 0 7px 18px rgba(31, 39, 57, 0.06);
+
+    footer {
+      color: #9299a7;
+    }
   }
 
   p {
@@ -1103,15 +1185,46 @@ input:focus-visible {
 }
 
 .composer {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0 24px 22px;
-  padding: 7px;
-  border: 1px solid #e2e5eb;
-  border-radius: 15px;
-  background: #fff;
-  box-shadow: 0 7px 24px rgba(31, 39, 57, 0.06);
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+  margin-top: auto;
+  margin-bottom: 14px;
+  margin-left: 16px;
+  margin-right: 16px;
+
+  &__surface {
+    display: flex;
+    min-width: 0;
+    align-items: flex-end;
+    gap: 10px;
+    padding: 7px;
+    border: 1px solid #e2e5eb;
+    border-radius: 17px;
+    background: #fff;
+    box-shadow: 0 7px 24px rgba(31, 39, 57, 0.06);
+    transition: border-color 150ms ease, box-shadow 150ms ease, background 150ms ease;
+
+    &:hover {
+      border-color: #ccd3df;
+    }
+
+    &:focus-within {
+      border-color: $color-primary;
+      outline: 2px solid rgba($color-primary, 0.2);
+      outline-offset: 1px;
+      box-shadow: 0 8px 28px rgba($color-primary, 0.12);
+    }
+
+    &:has(textarea:disabled) {
+      background: #f3f5f8;
+      box-shadow: none;
+    }
+  }
+
+  &--error &__surface {
+    border-color: #df5a67;
+  }
 
   &__input {
     position: relative;
@@ -1121,19 +1234,30 @@ input:focus-visible {
 
     textarea {
       width: 100%;
-      min-height: 38px;
-      max-height: 120px;
-      resize: vertical;
+      min-height: 44px;
+      max-height: 144px;
+      overflow-y: auto;
+      resize: none;
       border: 0;
       outline: 0;
       background: transparent;
       color: $color-ink;
-      padding: 11px 64px 8px 0;
-      font-size: 11px;
+      padding: 12px 64px 10px 10px;
+      font-size: 12px;
       line-height: 1.55;
 
       &::placeholder {
         color: #9da3af;
+      }
+
+      &:disabled {
+        color: #8c93a0;
+        -webkit-text-fill-color: #8c93a0;
+        opacity: 1;
+      }
+
+      &:focus-visible {
+        outline: 0;
       }
     }
   }
@@ -1148,8 +1272,8 @@ input:focus-visible {
 
   &__send {
     display: grid;
-    width: 38px;
-    height: 38px;
+    width: 44px;
+    height: 44px;
     flex: 0 0 auto;
     place-items: center;
     border-radius: 11px;
@@ -1173,6 +1297,19 @@ input:focus-visible {
       stroke-linecap: round;
       stroke-linejoin: round;
       stroke-width: 1.6;
+    }
+  }
+
+  &__error {
+    min-height: 14px;
+    padding: 0 10px;
+    color: #c63f4c;
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 1.5;
+    &-wrapper {
+      display: flex;
+      justify-content: center;
     }
   }
 }
@@ -1249,8 +1386,10 @@ input:focus-visible {
   }
 
   .conversation {
-    min-height: 100dvh;
-    grid-template-rows: 68px minmax(0, 1fr) auto;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    grid-template-rows: 68px auto minmax(0, 1fr) auto;
   }
 
   .chat-header {
@@ -1278,15 +1417,6 @@ input:focus-visible {
     box-shadow: 0 12px 35px rgba(31, 39, 57, 0.07);
   }
 
-  .conversation__body--active {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .message-list {
-    flex: 1;
-  }
-
   .message {
     max-width: 86%;
   }
@@ -1303,14 +1433,6 @@ input:focus-visible {
 
     h2 {
       font-size: 22px;
-    }
-  }
-
-  .composer {
-    margin: 0 12px 12px;
-
-    &__attach {
-      display: none;
     }
   }
 }

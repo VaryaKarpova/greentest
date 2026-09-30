@@ -1,6 +1,11 @@
-import { useState, type FormEvent } from "react";
+import { useState, type ClipboardEvent, type FormEvent } from "react";
 import type { Chat } from "../../types";
-import { createChatFromPhone } from "../../utils/phone";
+import {
+  createChatFromPhone,
+  formatPhoneDigits,
+  normalizePastedPhone,
+  PHONE_DIGITS_LENGTH,
+} from "../../utils/phone";
 
 type PhoneFormProps = {
   onCreate: (chat: Chat) => void;
@@ -8,21 +13,38 @@ type PhoneFormProps = {
 };
 
 export function PhoneForm({ onCreate, compact = false }: PhoneFormProps) {
-  const [phone, setPhone] = useState("");
+  const [phoneDigits, setPhoneDigits] = useState("");
   const [error, setError] = useState("");
+  const isComplete = phoneDigits.length === PHONE_DIGITS_LENGTH;
+  const inputId = `phone-${compact ? "compact" : "mobile"}`;
+  const errorId = `${inputId}-error`;
+
+  const handlePaste = (event: ClipboardEvent<HTMLInputElement>) => {
+    event.preventDefault();
+    const normalized = normalizePastedPhone(event.clipboardData.getData("text"));
+
+    if (normalized === null) {
+      setPhoneDigits("");
+      setError("Введите 10 цифр после +7");
+      return;
+    }
+
+    setPhoneDigits(normalized);
+    setError("");
+  };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const chat = createChatFromPhone(phone);
+    const chat = createChatFromPhone(phoneDigits);
 
     if (!chat) {
-      setError("Введите номер, используя цифры, пробелы, скобки или дефисы");
+      setError("Введите 10 цифр после +7");
       return;
     }
 
     setError("");
-    setPhone("");
+    setPhoneDigits("");
     onCreate(chat);
   };
 
@@ -32,38 +54,44 @@ export function PhoneForm({ onCreate, compact = false }: PhoneFormProps) {
         <div className="phone-form__heading">
           <span className="eyebrow">Новый чат</span>
           <h2>Кому напишем?</h2>
-          <p>Введите номер в международном формате.</p>
+          <p>Введите 10 цифр номера после +7.</p>
         </div>
       )}
       <div className="phone-form__control">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M7.5 4h2l1 4-2 1.3a12 12 0 0 0 6.2 6.2l1.3-2 4 1v2A3.5 3.5 0 0 1 16.5 20C9.6 20 4 14.4 4 7.5A3.5 3.5 0 0 1 7.5 4Z" />
-        </svg>
+        <label className="sr-only" htmlFor={inputId}>
+          Номер телефона получателя после +7
+        </label>
+        <span className="phone-form__prefix" aria-hidden="true">+7</span>
         <input
+          id={inputId}
           type="tel"
-          inputMode="tel"
-          autoComplete="tel"
-          placeholder="+7 (999) 123-45-67"
-          value={phone}
+          inputMode="numeric"
+          autoComplete="tel-national"
+          placeholder="999 123-45-67"
+          value={formatPhoneDigits(phoneDigits)}
           aria-label="Номер телефона получателя"
           aria-invalid={Boolean(error)}
-          aria-describedby={error ? "phone-error" : undefined}
+          aria-describedby={error ? errorId : undefined}
           onChange={(event) => {
-            setPhone(event.target.value);
+            setPhoneDigits(event.target.value.replace(/\D/g, "").slice(0, PHONE_DIGITS_LENGTH));
             setError("");
           }}
+          onPaste={handlePaste}
+          onBlur={() => {
+            if (phoneDigits && !isComplete) {
+              setError("Введите 10 цифр после +7");
+            }
+          }}
         />
-        <button type="submit" aria-label="Создать чат">
+        <button type="submit" aria-label="Создать чат" disabled={!isComplete || Boolean(error)}>
           <svg viewBox="0 0 20 20" aria-hidden="true">
             <path d="m7.5 4 6 6-6 6" />
           </svg>
         </button>
       </div>
-      {error && (
-        <span className="phone-form__error" id="phone-error" role="alert">
-          {error}
-        </span>
-      )}
+      <span className="phone-form__error" id={errorId} role="alert">
+        {error}
+      </span>
     </form>
   );
 }

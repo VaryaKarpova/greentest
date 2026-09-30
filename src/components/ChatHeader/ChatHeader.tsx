@@ -1,13 +1,27 @@
 import type { Chat } from "../../types";
 import { formatPhone } from "../../utils/phone";
+import type { NotificationConnectionStatus } from "../../hooks/useNotifications";
 
 type ChatHeaderProps = {
   idInstance: string;
   chat: Chat | null;
+  connectionStatus: NotificationConnectionStatus;
   onLogout: () => void;
 };
 
-export function ChatHeader({ idInstance, chat, onLogout }: ChatHeaderProps) {
+const connectionLabels: Record<NotificationConnectionStatus, string> = {
+  connecting: "Подключение к уведомлениям",
+  connected: "Сообщения синхронизируются",
+  reconnecting: "Восстанавливаем связь",
+  error: "Получение остановлено",
+};
+
+export function ChatHeader({
+  idInstance,
+  chat,
+  connectionStatus,
+  onLogout,
+}: ChatHeaderProps) {
   return (
     <header className="chat-header">
       <div className="chat-header__identity">
@@ -23,9 +37,13 @@ export function ChatHeader({ idInstance, chat, onLogout }: ChatHeaderProps) {
       </div>
 
       <div className="chat-header__session">
-        <span className="chat-header__status" aria-label="Сессия активна">
+        <span
+          className={`chat-header__status chat-header__status--${connectionStatus}`}
+          aria-live="polite"
+          title={`Инстанс ${idInstance}`}
+        >
           <i aria-hidden="true" />
-          <span>Инстанс {idInstance}</span>
+          <span>{connectionLabels[connectionStatus]}</span>
         </span>
         <button className="icon-button" type="button" onClick={onLogout} aria-label="Выйти">
           <svg viewBox="0 0 24 24" aria-hidden="true">

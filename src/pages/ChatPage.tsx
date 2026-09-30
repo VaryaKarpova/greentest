@@ -4,6 +4,7 @@ import { ChatHeader } from "../components/ChatHeader/ChatHeader";
 import { MessageComposer } from "../components/MessageComposer/MessageComposer";
 import { MessageList } from "../components/MessageList/MessageList";
 import { PhoneForm } from "../components/PhoneForm/PhoneForm";
+import { useNotifications } from "../hooks/useNotifications";
 import { useSendMessage } from "../hooks/useSendMessage";
 import type { Chat, Credentials, Message } from "../types";
 import { formatPhone } from "../utils/phone";
@@ -13,9 +14,46 @@ type ChatPageProps = {
   onLogout: () => void;
 };
 
+let localMessageSequence = 0;
+
+function createLocalMessageId(): string {
+  if (typeof globalThis.crypto?.randomUUID === "function") {
+    return globalThis.crypto.randomUUID();
+  }
+
+  localMessageSequence += 1;
+  return `local-${Date.now().toString(36)}-${localMessageSequence.toString(36)}`;
+}
+
 export function ChatPage({ credentials, onLogout }: ChatPageProps) {
   const [activeChat, setActiveChat] = useState<Chat | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const notifications = useNotifications({
+    credentials,
+    activeChat,
+    onMessage: (incomingMessage) => {
+      setMessages((current) => {
+        if (current.some((message) => message.idMessage === incomingMessage.idMessage)) {
+          return current;
+        }
+
+        return [
+          ...current,
+          {
+            id: incomingMessage.idMessage,
+            idMessage: incomingMessage.idMessage,
+            text: incomingMessage.text,
+            timestamp:
+              incomingMessage.timestamp > 1_000_000_000_000
+                ? incomingMessage.timestamp
+                : incomingMessage.timestamp * 1_000,
+            direction: "incoming",
+            status: "sent",
+          },
+        ];
+      });
+    },
+  });
   const sendMutation = useSendMessage(credentials, {
     onSuccess: (response, variables) => {
       setMessages((current) =>
@@ -47,10 +85,10 @@ export function ChatPage({ credentials, onLogout }: ChatPageProps) {
 
   const handleSend = (text: string) => {
     if (!activeChat || sendMutation.isPending) {
-      return;
+      return false;
     }
 
-    const localId = crypto.randomUUID();
+    const localId = createLocalMessageId();
     const message: Message = {
       id: localId,
       text,
@@ -61,6 +99,7 @@ export function ChatPage({ credentials, onLogout }: ChatPageProps) {
 
     setMessages((current) => [...current, message]);
     sendMutation.mutate({ localId, chatId: activeChat.chatId, message: text });
+    return true;
   };
 
   const handleRetry = (message: Message) => {
@@ -125,21 +164,38 @@ export function ChatPage({ credentials, onLogout }: ChatPageProps) {
 
         <div className="sidebar__spacer" />
         <div className="sidebar__footer">
-          <span className="connection-dot" aria-hidden="true" />
+          <span className={`connection-dot connection-dot--${notifications.status}`} aria-hidden="true" />
           <div>
-            <strong>Сессия защищена</strong>
-            <span>Данные хранятся в этой вкладке</span>
+            <strong>{notifications.status === "connected" ? "Соединение установлено" : "Проверяем соединение"}</strong>
+            <span>Уведомления GREEN-API</span>
           </div>
         </div>
       </aside>
 
       <section className="conversation">
-        <ChatHeader idInstance={credentials.idInstance} chat={activeChat} onLogout={onLogout} />
+        <ChatHeader
+          idInstance={credentials.idInstance}
+          chat={activeChat}
+          connectionStatus={notifications.status}
+          onLogout={onLogout}
+        />
+
+        <div
+          className={`connection-notice connection-notice--${notifications.status}`}
+          role={notifications.status === "error" ? "alert" : "status"}
+        >
+          {notifications.status === "connecting" && "Подключаем получение сообщений..."}
+          {notifications.status === "reconnecting" &&
+            (notifications.error ?? "Связь потеряна. Пробуем подключиться снова...")}
+          {notifications.status === "error" && notifications.error}
+        </div>
 
         <div className={`conversation__body${activeChat ? " conversation__body--active" : ""}`}>
-          <div className="mobile-phone-form">
-            <PhoneForm onCreate={handleCreateChat} />
-          </div>
+          {!activeChat && (
+            <div className="mobile-phone-form">
+              <PhoneForm onCreate={handleCreateChat} />
+            </div>
+          )}
 
           {activeChat ? (
             <MessageList
@@ -168,6 +224,7 @@ export function ChatPage({ credentials, onLogout }: ChatPageProps) {
         <MessageComposer
           disabled={!activeChat}
           isSending={sendMutation.isPending}
+          error={sendMutation.error?.message}
           onSend={handleSend}
         />
       </section>
