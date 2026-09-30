@@ -1,9 +1,13 @@
+import type { Chat } from "../../types";
+import { formatPhone } from "../../utils/phone";
+
 type ChatHeaderProps = {
   idInstance: string;
+  chat: Chat | null;
   onLogout: () => void;
 };
 
-export function ChatHeader({ idInstance, onLogout }: ChatHeaderProps) {
+export function ChatHeader({ idInstance, chat, onLogout }: ChatHeaderProps) {
   return (
     <header className="chat-header">
       <div className="chat-header__identity">
@@ -13,8 +17,8 @@ export function ChatHeader({ idInstance, onLogout }: ChatHeaderProps) {
           </svg>
         </div>
         <div>
-          <h1>Новый диалог</h1>
-          <p>Выберите получателя, чтобы начать</p>
+          <h1>{chat ? formatPhone(chat.phone) : "Новый диалог"}</h1>
+          <p>{chat ? "Личный чат MAX" : "Выберите получателя, чтобы начать"}</p>
         </div>
       </div>
 

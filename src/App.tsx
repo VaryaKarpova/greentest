@@ -51,7 +51,7 @@ export function App() {
   };
 
   return credentials ? (
-    <ChatPage idInstance={credentials.idInstance} onLogout={handleLogout} />
+    <ChatPage credentials={credentials} onLogout={handleLogout} />
   ) : (
     <AuthPage onLogin={handleLogin} />
   );

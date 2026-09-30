@@ -1,12 +1,87 @@
+import { useState } from "react";
 import { BrandMark } from "../components/BrandMark";
 import { ChatHeader } from "../components/ChatHeader/ChatHeader";
+import { MessageComposer } from "../components/MessageComposer/MessageComposer";
+import { MessageList } from "../components/MessageList/MessageList";
+import { PhoneForm } from "../components/PhoneForm/PhoneForm";
+import { useSendMessage } from "../hooks/useSendMessage";
+import type { Chat, Credentials, Message } from "../types";
+import { formatPhone } from "../utils/phone";
 
 type ChatPageProps = {
-  idInstance: string;
+  credentials: Credentials;
   onLogout: () => void;
 };
 
-export function ChatPage({ idInstance, onLogout }: ChatPageProps) {
+export function ChatPage({ credentials, onLogout }: ChatPageProps) {
+  const [activeChat, setActiveChat] = useState<Chat | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const sendMutation = useSendMessage(credentials, {
+    onSuccess: (response, variables) => {
+      setMessages((current) =>
+        current.map((message) =>
+          message.id === variables.localId
+            ? { ...message, idMessage: response.idMessage, status: "sent", error: undefined }
+            : message,
+        ),
+      );
+    },
+    onError: (error, variables) => {
+      setMessages((current) =>
+        current.map((message) =>
+          message.id === variables.localId
+            ? { ...message, status: "error", error: error.message }
+            : message,
+        ),
+      );
+    },
+  });
+
+  const handleCreateChat = (chat: Chat) => {
+    if (chat.chatId !== activeChat?.chatId) {
+      setMessages([]);
+    }
+
+    setActiveChat(chat);
+  };
+
+  const handleSend = (text: string) => {
+    if (!activeChat || sendMutation.isPending) {
+      return;
+    }
+
+    const localId = crypto.randomUUID();
+    const message: Message = {
+      id: localId,
+      text,
+      timestamp: Date.now(),
+      direction: "outgoing",
+      status: "sending",
+    };
+
+    setMessages((current) => [...current, message]);
+    sendMutation.mutate({ localId, chatId: activeChat.chatId, message: text });
+  };
+
+  const handleRetry = (message: Message) => {
+    if (!activeChat || sendMutation.isPending) {
+      return;
+    }
+
+    setMessages((current) =>
+      current.map((currentMessage) =>
+        currentMessage.id === message.id
+          ? { ...currentMessage, status: "sending", error: undefined }
+          : currentMessage,
+      ),
+    );
+    sendMutation.mutate({
+      localId: message.id,
+      chatId: activeChat.chatId,
+      message: message.text,
+    });
+  };
+
   return (
     <main className="chat-page">
       <aside className="sidebar">
@@ -19,29 +94,36 @@ export function ChatPage({ idInstance, onLogout }: ChatPageProps) {
           </button>
         </div>
 
-        <div className="sidebar__search">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="11" cy="11" r="6" />
-            <path d="m16 16 4 4" />
-          </svg>
-          <input type="tel" placeholder="Номер телефона" disabled aria-label="Номер телефона" />
-          <span>Этап 2</span>
-        </div>
+        <PhoneForm onCreate={handleCreateChat} compact />
 
         <div className="sidebar__section-head">
           <span>Диалоги</span>
-          <span>0</span>
+          <span>{activeChat ? 1 : 0}</span>
         </div>
 
-        <div className="sidebar__empty">
-          <span className="sidebar__empty-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24">
-              <path d="M5 6.5A2.5 2.5 0 0 1 7.5 4h9A2.5 2.5 0 0 1 19 6.5v6a2.5 2.5 0 0 1-2.5 2.5H11l-4.5 4v-4A2.5 2.5 0 0 1 4 12.5v-6Z" />
-            </svg>
-          </span>
-          <p>Здесь появится ваш первый диалог</p>
-        </div>
+        {activeChat ? (
+          <div className="sidebar-chat" aria-current="page">
+            <span className="sidebar-chat__avatar" aria-hidden="true">
+              {activeChat.phone.slice(-2)}
+            </span>
+            <div>
+              <strong>{formatPhone(activeChat.phone)}</strong>
+              <span>{messages.at(-1)?.text ?? "Новый диалог"}</span>
+            </div>
+            <time>{messages.length > 0 ? new Intl.DateTimeFormat("ru", { hour: "2-digit", minute: "2-digit" }).format(messages.at(-1)!.timestamp) : ""}</time>
+          </div>
+        ) : (
+          <div className="sidebar__empty">
+            <span className="sidebar__empty-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M5 6.5A2.5 2.5 0 0 1 7.5 4h9A2.5 2.5 0 0 1 19 6.5v6a2.5 2.5 0 0 1-2.5 2.5H11l-4.5 4v-4A2.5 2.5 0 0 1 4 12.5v-6Z" />
+              </svg>
+            </span>
+            <p>Введите номер выше, чтобы создать первый диалог</p>
+          </div>
+        )}
 
+        <div className="sidebar__spacer" />
         <div className="sidebar__footer">
           <span className="connection-dot" aria-hidden="true" />
           <div>
@@ -52,41 +134,42 @@ export function ChatPage({ idInstance, onLogout }: ChatPageProps) {
       </aside>
 
       <section className="conversation">
-        <ChatHeader idInstance={idInstance} onLogout={onLogout} />
+        <ChatHeader idInstance={credentials.idInstance} chat={activeChat} onLogout={onLogout} />
 
-        <div className="conversation__body">
-          <div className="empty-chat">
-            <div className="empty-chat__illustration" aria-hidden="true">
-              <span className="empty-chat__orbit empty-chat__orbit--one" />
-              <span className="empty-chat__orbit empty-chat__orbit--two" />
-              <svg viewBox="0 0 120 120">
-                <path className="empty-chat__bubble" d="M22 28c0-8 6-14 14-14h49c8 0 14 6 14 14v34c0 8-6 14-14 14H59L36 97l5-21h-5c-8 0-14-6-14-14V28Z" />
-                <path className="empty-chat__line" d="M41 37h39M41 50h27M41 63h19" />
-                <path className="empty-chat__spark" d="m83 79 4 8 8 4-8 4-4 8-4-8-8-4 8-4 4-8Z" />
-              </svg>
-            </div>
-            <span className="eyebrow">Все готово</span>
-            <h2>Начните новый диалог</h2>
-            <p>
-              На следующем этапе здесь можно будет указать номер телефона и отправить первое сообщение в MAX.
-            </p>
+        <div className={`conversation__body${activeChat ? " conversation__body--active" : ""}`}>
+          <div className="mobile-phone-form">
+            <PhoneForm onCreate={handleCreateChat} />
           </div>
+
+          {activeChat ? (
+            <MessageList
+              messages={messages}
+              isSending={sendMutation.isPending}
+              onRetry={handleRetry}
+            />
+          ) : (
+            <div className="empty-chat">
+              <div className="empty-chat__illustration" aria-hidden="true">
+                <span className="empty-chat__orbit empty-chat__orbit--one" />
+                <span className="empty-chat__orbit empty-chat__orbit--two" />
+                <svg viewBox="0 0 120 120">
+                  <path className="empty-chat__bubble" d="M22 28c0-8 6-14 14-14h49c8 0 14 6 14 14v34c0 8-6 14-14 14H59L36 97l5-21h-5c-8 0-14-6-14-14V28Z" />
+                  <path className="empty-chat__line" d="M41 37h39M41 50h27M41 63h19" />
+                  <path className="empty-chat__spark" d="m83 79 4 8 8 4-8 4-4 8-4-8-8-4 8-4 4-8Z" />
+                </svg>
+              </div>
+              <span className="eyebrow">Все готово</span>
+              <h2>Начните новый диалог</h2>
+              <p>Введите номер телефона получателя, чтобы отправить сообщение в MAX.</p>
+            </div>
+          )}
         </div>
 
-        <div className="composer" aria-label="Поле сообщения пока недоступно">
-          <button className="icon-button" type="button" aria-label="Добавить вложение" disabled>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="m8 12.5 5.8-5.8a3 3 0 0 1 4.2 4.2l-7.5 7.5a4.5 4.5 0 1 1-6.4-6.4l7.2-7.2" />
-            </svg>
-          </button>
-          <input type="text" placeholder="Сначала выберите получателя" disabled />
-          <button className="composer__send" type="button" aria-label="Отправить сообщение" disabled>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="m4 5 16 7-16 7 3-7-3-7Z" />
-              <path d="M7 12h13" />
-            </svg>
-          </button>
-        </div>
+        <MessageComposer
+          disabled={!activeChat}
+          isSending={sendMutation.isPending}
+          onSend={handleSend}
+        />
       </section>
     </main>
   );
