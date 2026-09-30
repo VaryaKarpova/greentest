@@ -84,3 +84,23 @@ npm run preview
 ```
 
 Готовые файлы после сборки находятся в каталоге `dist`.
+
+## Деплой на GitHub Pages
+
+В проекте настроен workflow `.github/workflows/deploy.yml`. При каждом push в ветку `main` GitHub Actions собирает приложение и публикует каталог `dist` на GitHub Pages.
+
+1. Создайте репозиторий на GitHub и отправьте в него проект:
+
+   ```bash
+   git add .
+   git commit -m "Configure GitHub Pages deployment"
+   git push origin main
+   ```
+
+2. Откройте репозиторий на GitHub и перейдите в `Settings` → `Pages`.
+3. В разделе `Build and deployment` выберите источник `GitHub Actions`.
+4. Откройте вкладку `Actions` и дождитесь завершения workflow `Deploy to GitHub Pages`.
+
+После первого успешного деплоя ссылка на сайт появится в настройках Pages и в выполненном workflow. Обычно она имеет вид `https://<имя-пользователя>.github.io/<имя-репозитория>/`.
+
+Workflow также можно запустить вручную через `Actions` → `Deploy to GitHub Pages` → `Run workflow`.
